@@ -151,7 +151,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Database1.cpp" />
     <ClCompile Include="src\jsoncpp.cpp" />
     <ClCompile Include="src\LoginParser.cpp" />
     <ClCompile Include="src\LoginServer.cpp" />
@@ -159,7 +158,6 @@
     <ClCompile Include="src\sha256.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="headers\Database1.h" />
     <ClInclude Include="headers\LoginConnectionHandler.h" />
     <ClInclude Include="headers\LoginConstants.h" />
     <ClInclude Include="headers\LoginParser.h" />
