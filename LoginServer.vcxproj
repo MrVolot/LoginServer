@@ -153,7 +153,6 @@
   <ItemGroup>
     <ClCompile Include="src\Database1.cpp" />
     <ClCompile Include="src\jsoncpp.cpp" />
-    <ClCompile Include="src\LoginConnectionHandler.cpp" />
     <ClCompile Include="src\LoginParser.cpp" />
     <ClCompile Include="src\LoginServer.cpp" />
     <ClCompile Include="src\main.cpp" />

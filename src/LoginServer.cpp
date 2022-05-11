@@ -1,5 +1,4 @@
 #include "LoginServer.h"
-#include "Database1.h"
 #include "Database.h"
 #include <boost/bind.hpp>
 #include <iostream>

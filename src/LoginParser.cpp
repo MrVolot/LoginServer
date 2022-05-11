@@ -1,7 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "LoginParser.h"
-#include "Database1.h"
 #include "md5/sha256.h"
 #include <chrono>
 #include <ctime> 
@@ -20,16 +19,17 @@ LoginParser& LoginParser::getInstance()
 
 credentialsStatus LoginParser::processCredentials(const std::string& str)
 {
+	//TODO
 	try {
 		reader.parse(str.c_str(), value);
 		if (value["command"].asString() == "login") {
-			return Database::getInstance().checkPassword(value["login"].asString(), value["password"].asString());
+			//return Database::getInstance().checkPassword(value["login"].asString(), value["password"].asString());
 		}
 		if (value["command"].asString() == "register") {
-			return Database::getInstance().registerNewUser(value["login"].asString(), value["password"].asString());
+			//return Database::getInstance().registerNewUser(value["login"].asString(), value["password"].asString());
 		}
 		if (value["command"].asString() == "auth") {
-			return Database::getInstance().authUser(value["login"].asString(), value["token"].asString());
+			//return Database::getInstance().authUser(value["login"].asString(), value["token"].asString());
 		}
 	}catch(Json::LogicError& logicError){
 		return credentialsStatus::ERROR_;

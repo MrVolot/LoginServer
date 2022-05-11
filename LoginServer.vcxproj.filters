@@ -18,9 +18,6 @@
     <ClCompile Include="src\Database1.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\LoginConnectionHandler.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="src\LoginParser.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
