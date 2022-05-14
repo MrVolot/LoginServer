@@ -1,5 +1,6 @@
 #include "LoginServer.h"
 #include "Database.h"
+#include "ConnectionHandler.h"
 #include <boost/bind.hpp>
 #include <iostream>
 
@@ -9,7 +10,7 @@ LoginServer::LoginServer(boost::asio::io_service& service): service_ { service }
     startAccept();
 }
 
-void LoginServer::handleAccept(std::shared_ptr<ConnectionHandler<LoginServer>> connection, const boost::system::error_code& err)
+void LoginServer::handleAccept(std::shared_ptr<IConnectionHandler<LoginServer>> connection, const boost::system::error_code& err)
 {
     if (!err) {
 		connection_->callRead();
@@ -26,7 +27,7 @@ void LoginServer::startAccept()
     acceptor_.async_accept(connection_->getSocket(), boost::bind(&LoginServer::handleAccept, this, connection_, boost::asio::placeholders::error));
 }
 
-void LoginServer::readHandle(std::shared_ptr<ConnectionHandler<LoginServer>> connection, const boost::system::error_code& err, size_t bytes_transferred)
+void LoginServer::readHandle(std::shared_ptr<IConnectionHandler<LoginServer>> connection, const boost::system::error_code& err, size_t bytes_transferred)
 {
 	if (err) {
 		connection_->getSocket().close();
@@ -40,7 +41,7 @@ void LoginServer::readHandle(std::shared_ptr<ConnectionHandler<LoginServer>> con
 	connection_->callRead();
 }
 
-void LoginServer::writeHandle(std::shared_ptr<ConnectionHandler<LoginServer>> connection, const boost::system::error_code& err, size_t bytes_transferred)
+void LoginServer::writeHandle(std::shared_ptr<IConnectionHandler<LoginServer>> connection, const boost::system::error_code& err, size_t bytes_transferred)
 {
 	if (err) {
 		std::cout << err.message();
