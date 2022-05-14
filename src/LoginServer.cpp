@@ -6,8 +6,7 @@
 LoginServer::LoginServer(boost::asio::io_service& service): service_ { service }, acceptor_{ service, ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 10677) }
 {
     DatabaseHandler::getInstance().connectDB();
-	//DatabaseHandler::getInstance().executeQuery("SELECT * FROM CONTACTS", 5);
-    //startAccept();
+    startAccept();
 }
 
 void LoginServer::handleAccept(std::shared_ptr<ConnectionHandler<LoginServer>> connection, const boost::system::error_code& err)
