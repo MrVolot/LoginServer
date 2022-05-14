@@ -2,6 +2,7 @@
 
 #include "LoginParser.h"
 #include "md5/sha256.h"
+#include "Database.h"
 #include <chrono>
 #include <ctime> 
 #include <sstream>
@@ -23,13 +24,13 @@ credentialsStatus LoginParser::processCredentials(const std::string& str)
 	try {
 		reader.parse(str.c_str(), value);
 		if (value["command"].asString() == "login") {
-			//return Database::getInstance().checkPassword(value["login"].asString(), value["password"].asString());
+			return login(value["login"].asString(), value["password"].asString());
 		}
 		if (value["command"].asString() == "register") {
-			//return Database::getInstance().registerNewUser(value["login"].asString(), value["password"].asString());
+			return registration(value["login"].asString(), value["password"].asString());
 		}
 		if (value["command"].asString() == "auth") {
-			//return Database::getInstance().authUser(value["login"].asString(), value["token"].asString());
+			return auth(value["login"].asString(), value["token"].asString());
 		}
 	}catch(Json::LogicError& logicError){
 		return credentialsStatus::ERROR_;
@@ -48,4 +49,40 @@ std::string LoginParser::createHash(const std::string& login, const std::string&
 	hash.append(ss.str());
 	hash = sha256(hash);
 	return hash;
+}
+
+credentialsStatus LoginParser::login(const std::string& login, const std::string& password)
+{
+	std::string query{ "SELECT LOGIN FROM CONTACTS WHERE LOGIN = '" + login + "' AND PASSWORD = '" + password + "'"};
+	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
+	if (result.empty()) {
+		return credentialsStatus::WRONG_PASSWORD;
+	}
+	auto hash{ createHash(login, password) };
+	query = "UPDATE CONTACTS SET TOKEN = '" + hash + "' WHERE LOGIN = '" + login + "'";
+	DatabaseHandler::getInstance().executeQuery(query);
+	return credentialsStatus::RIGHT_PASSWORD;
+}
+
+credentialsStatus LoginParser::registration(const std::string& login, const std::string& password)
+{
+	std::string query{ "SELECT LOGIN FROM CONTACTS WHERE LOGIN = '" + login + "'" };
+	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
+	if (!result.empty()) {
+		return credentialsStatus::USER_ALREADY_EXISTS;
+	}
+	auto hash{ createHash(login, password) };
+	query = "INSERT INTO CONTACTS VALUES ('" + login + "','" + password + "','" + hash + "')";
+	DatabaseHandler::getInstance().executeQuery(query);
+	return credentialsStatus::USER_REGISTERED;
+}
+
+credentialsStatus LoginParser::auth(const std::string& login, const std::string& token)
+{
+	std::string query{ "SELECT LOGIN FROM CONTACTS WHERE LOGIN = '" + login + "' AND TOKEN = '" + token + "'" };
+	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
+	if (result.empty()) {
+		return credentialsStatus::WRONG_TOKEN;
+	}
+	return credentialsStatus::RIGHT_TOKEN;
 }
