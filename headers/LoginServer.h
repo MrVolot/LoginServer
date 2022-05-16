@@ -14,5 +14,5 @@ public:
     void startAccept();
     void readHandle(std::shared_ptr<IConnectionHandler<LoginServer>> connection, const boost::system::error_code& err, size_t bytes_transferred);
     void writeHandle(std::shared_ptr<IConnectionHandler<LoginServer>> connection, const boost::system::error_code& err, size_t bytes_transferred);
-    void sendResponse(credentialsStatus status);
+    void sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> connection, credentialsStatus status);
 };
