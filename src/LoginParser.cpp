@@ -20,7 +20,6 @@ LoginParser& LoginParser::getInstance()
 
 credentialsStatus LoginParser::processCredentials(const std::string& str)
 {
-	//TODO
 	try {
 		reader.parse(str.c_str(), value);
 		if (value["command"].asString() == "login") {
@@ -58,7 +57,8 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 	if (result.empty()) {
 		return credentialsStatus::WRONG_PASSWORD;
 	}
-	auto hash{ createHash(login, password) };
+	auto newHash{ createHash(login, password) };
+	hash = newHash;
 	query = "UPDATE CONTACTS SET TOKEN = '" + hash + "' WHERE LOGIN = '" + login + "'";
 	DatabaseHandler::getInstance().executeQuery(query);
 	return credentialsStatus::RIGHT_PASSWORD;
@@ -71,7 +71,8 @@ credentialsStatus LoginParser::registration(const std::string& login, const std:
 	if (!result.empty()) {
 		return credentialsStatus::USER_ALREADY_EXISTS;
 	}
-	auto hash{ createHash(login, password) };
+	auto newHash{ createHash(login, password) };
+	hash = newHash;
 	query = "INSERT INTO CONTACTS VALUES ('" + login + "','" + password + "','" + hash + "')";
 	DatabaseHandler::getInstance().executeQuery(query);
 	return credentialsStatus::USER_REGISTERED;
@@ -84,5 +85,6 @@ credentialsStatus LoginParser::auth(const std::string& login, const std::string&
 	if (result.empty()) {
 		return credentialsStatus::WRONG_TOKEN;
 	}
+	hash = token;
 	return credentialsStatus::RIGHT_TOKEN;
 }
