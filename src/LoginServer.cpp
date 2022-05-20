@@ -4,9 +4,11 @@
 #include <boost/bind.hpp>
 #include <iostream>
 
-LoginServer::LoginServer(boost::asio::io_service& service) : service_{ service }, acceptor_{ service, ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 10677) }, connection_{nullptr}
+LoginServer::LoginServer(boost::asio::io_service& service) : service_{ service },
+acceptor_{ service, ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 10677) },
+connection_{nullptr}
 {
-    DatabaseHandler::getInstance().connectDB();
+    DatabaseHandler::getInstance().connectDB("Login_Server", "123");
     startAccept();
 }
 
