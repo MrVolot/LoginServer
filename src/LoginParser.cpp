@@ -84,5 +84,6 @@ credentialsStatus LoginParser::auth(const std::string& login, const std::string&
 	if (result.empty()) {
 		return credentialsStatus::WRONG_TOKEN;
 	}
+	hash = token;
 	return credentialsStatus::RIGHT_TOKEN;
 }
