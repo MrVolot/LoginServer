@@ -60,8 +60,10 @@ void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> 
 		value["status"] = "true";
 		value["token"] = LoginParser::getInstance().hash;
 		connection->callWrite(writer.write(value));
+		connection->getSocket().close();
 		return;
 	}
 	value["status"] = "false";
 	connection->callWrite(writer.write(value));
+	connection->getSocket().close();
 }
