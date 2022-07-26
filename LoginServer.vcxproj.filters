@@ -44,5 +44,8 @@
     <ClInclude Include="headers\LoginServer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="headers\Commands.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

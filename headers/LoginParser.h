@@ -12,7 +12,7 @@ public:
 	static LoginParser& getInstance();
 	credentialsStatus processCredentials(const std::string& str);
 	std::string createHash(const std::string& login, const std::string& password);
-	credentialsStatus login(const std::string& login, const std::string& password);
-	credentialsStatus registration(const std::string& login, const std::string& password);
-	credentialsStatus auth(const std::string& login, const std::string& token);
+	credentialsStatus login(const std::string& login, const std::string& password, const std::string& deviceId);
+	credentialsStatus registration(const std::string& login, const std::string& password, const std::string& deviceId);
+	credentialsStatus auth(const std::string& deviceId);
 };

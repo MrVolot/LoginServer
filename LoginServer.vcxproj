@@ -120,7 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)$(ProjectName)\headers;$(SolutionDir)ThirdParty;$(SolutionDir)ConnectionHandler\headers;$(SolutionDir)DatabaseHandler\headers</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -158,6 +158,7 @@
     <ClCompile Include="src\sha256.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\Commands.h" />
     <ClInclude Include="headers\LoginConnectionHandler.h" />
     <ClInclude Include="headers\LoginConstants.h" />
     <ClInclude Include="headers\LoginParser.h" />
