@@ -5,7 +5,7 @@
 #include <boost/bind.hpp>
 
 LoginServer::LoginServer(boost::asio::io_service& service) : service_{ service },
-acceptor_{ service, ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 10679) },
+acceptor_{ service, ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 10696) },
 connection_{ nullptr }
 {
 	DatabaseHandler::getInstance().connectDB("Login_Server", "123");
@@ -36,7 +36,7 @@ void LoginServer::readHandle(std::shared_ptr<IConnectionHandler<LoginServer>> co
 	}
 	std::string data{ boost::asio::buffer_cast<const char*>(connection->getStrBuf()->data()) };
 	auto status{ LoginParser::getInstance().processCredentials(data) };
-	sendResponse(connection, status);
+	sendResponse(connection, status, LoginParser::getInstance().getUserId(data));
 	connection->getStrBuf().reset(new boost::asio::streambuf);
 	connection->setMutableBuffer();
 	connection->callAsyncRead();
@@ -50,7 +50,7 @@ void LoginServer::writeHandle(std::shared_ptr<IConnectionHandler<LoginServer>> c
 	}
 }
 
-void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> connection, credentialsStatus status)
+void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> connection, credentialsStatus status, const std::string& userId)
 {
 	Json::Value value;
 	Json::FastWriter writer;
@@ -62,19 +62,19 @@ void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> 
 		connection->getSocket().close();
 		return;
 	}
-	if (status == credentialsStatus::AUTHORIZATION_FAILED) {
-		value["command"] = AUTHFAIL;
-		value["status"] = "false";
-		value["token"] = LoginParser::getInstance().hash;
-		connection->callWrite(writer.write(value));
-		return;
-	}
 	if (status == credentialsStatus::AUTHORIZATION_SUCCEEDED) {
 		value["command"] = AUTHSUCCESS;
 		value["status"] = "true";
 		value["token"] = LoginParser::getInstance().hash;
 		connection->callWrite(writer.write(value));
 		connection->getSocket().close();
+		return;
+	}
+	if (status == credentialsStatus::AUTHORIZATION_FAILED) {
+		value["command"] = AUTHFAIL;
+		value["status"] = "false";
+		value["token"] = LoginParser::getInstance().hash;
+		connection->callWrite(writer.write(value));
 		return;
 	}
 	if(status == credentialsStatus::USER_ALREADY_EXISTS){
