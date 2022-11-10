@@ -38,7 +38,7 @@ void LoginServer::readHandle(std::shared_ptr<IConnectionHandler<LoginServer>> co
 	auto status{ LoginParser::getInstance().processCredentials(data) };
 	sendResponse(connection, status, LoginParser::getInstance().getUserId(data));
 	connection->getStrBuf().reset(new boost::asio::streambuf);
-	connection->setMutableBuffer();
+	connection->resetStrBuf();
 	connection->callAsyncRead();
 }
 
