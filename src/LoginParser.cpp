@@ -8,7 +8,6 @@
 #include <sstream>
 #include <iomanip> 
 
-
 LoginParser::LoginParser() = default;
 
 LoginParser& LoginParser::getInstance()
@@ -34,6 +33,17 @@ credentialsStatus LoginParser::processCredentials(const std::string& str)
 	catch (Json::LogicError& logicError) {
 		return credentialsStatus::ERROR_;
 	}
+}
+
+std::string LoginParser::getUserId(const std::string& data)
+{
+	reader.parse(data.c_str(), value);
+	std::string userIdQuery{ "SELECT ID FROM CONTACTS WHERE LOGIN = '" + value["login"].asString() + "'" };
+	auto userId{ DatabaseHandler::getInstance().executeQuery(userIdQuery) };
+	if (userId.empty()) {
+		return "";
+	}
+	return userId[0][0];
 }
 
 std::string LoginParser::createHash(const std::string& login, const std::string& password)
@@ -95,9 +105,10 @@ credentialsStatus LoginParser::registration(const std::string& login, const std:
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
-
 	query = "INSERT INTO AUTH VALUES('" + userId[0][0] + "','" + deviceId + "','" + hash + "','" + std::to_string(authTime) + "','" + ss.str() + "')";
 	DatabaseHandler::getInstance().executeQuery(query);
+
+	createFriendListTable(userId[0][0]);
 
 	return credentialsStatus::SUCCESSFUL_REGISTRATION;
 }
@@ -121,4 +132,11 @@ credentialsStatus LoginParser::auth(const std::string& deviceId)
 		return credentialsStatus::AUTHORIZATION_FAILED;
 	}
 	return credentialsStatus::AUTHORIZATION_SUCCEEDED;
+}
+
+void LoginParser::createFriendListTable(const std::string& id)
+{
+	std::string tableName{"FL_" + id};
+	std::string query{ "CREATE TABLE " + tableName + "(ID int NOT NULL PRIMARY KEY, Name varchar(255) NOT NULL)" }; // TODO make FR key instead of PM key
+	DatabaseHandler::getInstance().executeQuery(query);
 }
