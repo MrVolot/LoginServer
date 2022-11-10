@@ -34,7 +34,7 @@ void LoginServer::readHandle(std::shared_ptr<IConnectionHandler<LoginServer>> co
 		connection->getSocket().close();
 		return;
 	}
-	std::string data{ boost::asio::buffer_cast<const char*>(connection->getStrBuf()->data()) };
+	std::string data{ connection->getData() };
 	auto status{ LoginParser::getInstance().processCredentials(data) };
 	sendResponse(connection, status, LoginParser::getInstance().getUserId(data));
 	connection->getStrBuf().reset(new boost::asio::streambuf);
