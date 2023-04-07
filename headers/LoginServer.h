@@ -10,8 +10,6 @@ class LoginServer {
     boost::asio::ssl::context ssl_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
     std::shared_ptr<IConnectionHandler<LoginServer>> connection_;
-
-    bool custom_verify_callback(bool preverified, boost::asio::ssl::verify_context& ctx);
 public:
     LoginServer(boost::asio::io_service& service);
     void handleAccept(std::shared_ptr<IConnectionHandler<LoginServer>> connection, const boost::system::error_code& err);
