@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\ThirdParty\certificateUtils\certificateUtils.cpp" />
     <ClCompile Include="src\jsoncpp.cpp" />
     <ClCompile Include="src\LoginParser.cpp" />
     <ClCompile Include="src\LoginServer.cpp" />
