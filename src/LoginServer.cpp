@@ -118,6 +118,13 @@ void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> 
 		connection->callWrite(writer.write(value));
 		return;
 	}
+	if (status == credentialsStatus::GUEST_USER_CREATED_SUCCESSFULLY) {
+		value["command"] = GUEST_USER_USER_SUCCESSFUL_LOGIN;
+		value["token"] = LoginParser::getInstance().hash;
+		connection->callWrite(writer.write(value));
+		connection->getSocket().close();
+		return;
+	}
 	value["command"] = WRONGCREDENTIALS;
 	value["status"] = "false";
 	connection->callWrite(writer.write(value));

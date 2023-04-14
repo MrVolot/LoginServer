@@ -12,6 +12,8 @@ class LoginParser {
 	credentialsStatus registration(const std::string& login, const std::string& password, const std::string& deviceId);
 	credentialsStatus auth(const std::string& deviceId);
 	void createFriendListTable(const std::string& id);
+	std::string generate_guest_username();
+	credentialsStatus createGuestAccount();
 public:
 	std::string hash;
 	static LoginParser& getInstance();

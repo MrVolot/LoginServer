@@ -3,10 +3,12 @@
 #include "LoginParser.h"
 #include "md5/sha256.h"
 #include "Database.h"
+#include "Commands.h"
 #include <chrono>
 #include <ctime> 
 #include <sstream>
 #include <iomanip> 
+#include <random>
 
 LoginParser::LoginParser() = default;
 
@@ -28,6 +30,9 @@ credentialsStatus LoginParser::processCredentials(const std::string& str)
 		}
 		if (value["command"].asString() == "auth") {
 			return auth(value["deviceId"].asString());
+		}
+		if (value["command"].asString() == "guestUserLogin") {
+			return createGuestAccount();
 		}
 	}
 	catch (Json::LogicError& logicError) {
@@ -139,4 +144,30 @@ void LoginParser::createFriendListTable(const std::string& id)
 	std::string tableName{"FL_" + id};
 	std::string query{ "CREATE TABLE " + tableName + "(ID int NOT NULL PRIMARY KEY, Name varchar(255) NOT NULL)" }; // TODO make FR key instead of PM key
 	DatabaseHandler::getInstance().executeQuery(query);
+}
+
+credentialsStatus LoginParser::createGuestAccount()
+{
+	auto query{ "INSERT INTO CONTACTS (LOGIN, TOKEN, GUID) VALUES (?, ?, NEWID())" };
+	auto guestName{ generate_guest_username() };
+	hash = createHash("login" + guestName, "password" + guestName);
+	DatabaseHandler::getInstance().executeWithPreparedStatement(query, { guestName, hash });
+	return credentialsStatus::GUEST_USER_CREATED_SUCCESSFULLY;
+}
+
+std::string LoginParser::generate_guest_username() {
+	std::string prefix = "Guest_";
+	std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	int length = 8; // Length of the random string
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dist(0, charset.size() - 1);
+
+	std::string random_string;
+	for (int i = 0; i < length; ++i) {
+		random_string += charset[dist(gen)];
+	}
+
+	return prefix + random_string;
 }
