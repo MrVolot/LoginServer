@@ -5,6 +5,7 @@
 #include <boost/bind.hpp>
 #include <thread>
 #include <chrono>
+#include <random>
 #include "certificateUtils/certificateUtils.h"
 
 LoginServer::LoginServer(boost::asio::io_service& service) :
@@ -123,6 +124,25 @@ void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> 
 		value["token"] = LoginParser::getInstance().hash;
 		connection->callWrite(writer.write(value));
 		connection->getSocket().close();
+		return;
+	}
+	if (status == credentialsStatus::AUTHENTICATION_IS_NEEDED) {
+		//send the request to confirm authentication by putting in the authCode in the email
+		value["command"] = EMAIL_CODE_VERIFICATION;
+		value["token"] = LoginParser::getInstance().hash;
+		value["personalId"] = userId;
+		connection->callWrite(writer.write(value));
+		return;
+	}
+	if (status == credentialsStatus::CORRECT_EMAIL_CODE) {
+		value["command"] = CORRECT_CODE;
+		connection->callWrite(writer.write(value));
+		connection->getSocket().close();
+		return;
+	}
+	if (status == credentialsStatus::WRONG_EMAIL_CODE) {
+		value["command"] = WRONG_CODE;
+		connection->callWrite(writer.write(value));
 		return;
 	}
 	value["command"] = WRONGCREDENTIALS;

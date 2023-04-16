@@ -34,6 +34,9 @@ credentialsStatus LoginParser::processCredentials(const std::string& str)
 		if (value["command"].asString() == "guestUserLogin") {
 			return createGuestAccount();
 		}
+		if (value["command"].asString() == "emailCodeConfirmation") {
+			return verifyEmailCode(value["userId"].asString(), value["verCode"].asString());
+		}
 	}
 	catch (Json::LogicError& logicError) {
 		return credentialsStatus::ERROR_;
@@ -67,7 +70,7 @@ std::string LoginParser::createHash(const std::string& login, const std::string&
 
 credentialsStatus LoginParser::login(const std::string& login, const std::string& password, const std::string& deviceId)
 {
-	std::string query{ "SELECT LOGIN FROM CONTACTS WHERE LOGIN = '" + login + "' AND PASSWORD = '" + password + "'" };
+	std::string query{ "SELECT LOGIN, EMAIL, AUTHENTICATION_ENABLED FROM CONTACTS WHERE LOGIN = '" + login + "' AND PASSWORD = '" + password + "'" };
 	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
 	if (result.empty()) {
 		return credentialsStatus::WRONG_PASSWORD;
@@ -88,7 +91,17 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 
 	query = "UPDATE AUTH SET USERID = '" + userId[0][0] + "', DEVICEID = '" + deviceId + "', TOKEN = '" + hash + "', SESSIONTIME = '" + std::to_string(authTime) + "', CREATIONDATE = '" + ss.str() + "'";
 	DatabaseHandler::getInstance().executeQuery(query);
-	return credentialsStatus::RIGHT_PASSWORD;
+
+	if (result[0][2] == "1") {
+		auto authCode{ generateUniqueCode() };
+		emailHandler.sendEmail(result[0][1], authCode);
+		query = "UPDATE CONTACTS SET AUTHENTICATION_CODE = ? WHERE LOGIN = ?";
+		DatabaseHandler::getInstance().executeWithPreparedStatement(query, { authCode, login });
+		return credentialsStatus::AUTHENTICATION_IS_NEEDED;
+	}
+	else {
+		return credentialsStatus::RIGHT_PASSWORD;
+	}
 }
 
 credentialsStatus LoginParser::registration(const std::string& login, const std::string& password, const std::string& deviceId)
@@ -148,15 +161,27 @@ void LoginParser::createFriendListTable(const std::string& id)
 
 credentialsStatus LoginParser::createGuestAccount()
 {
-	auto query{ "INSERT INTO CONTACTS (LOGIN, TOKEN, GUID) VALUES (?, ?, NEWID())" };
-	auto guestName{ generate_guest_username() };
+	auto query{ "INSERT INTO CONTACTS (LOGIN, TOKEN, GUID) OUTPUT INSERTED.ID VALUES (?, ?, NEWID())" };
+	auto guestName{ "Guest_" + generateUniqueCode() };
 	hash = createHash("login" + guestName, "password" + guestName);
-	DatabaseHandler::getInstance().executeWithPreparedStatement(query, { guestName, hash });
+	auto result{ DatabaseHandler::getInstance().executeWithPreparedStatement(query, { guestName, hash }) };
+	result.next();
+	auto guestId{ result.get<std::string>(0) };
+	createFriendListTable(guestId);
 	return credentialsStatus::GUEST_USER_CREATED_SUCCESSFULLY;
 }
 
-std::string LoginParser::generate_guest_username() {
-	std::string prefix = "Guest_";
+credentialsStatus LoginParser::verifyEmailCode(const std::string& id, const std::string& code)
+{
+	std::string query{ "SELECT AUTHENTICATION_CODE, EMAIL FROM CONTACTS WHERE ID = " + id };
+	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
+	if (!result.empty() && result[0][0] == code) {
+		return credentialsStatus::CORRECT_EMAIL_CODE;
+	}
+	return credentialsStatus::WRONG_EMAIL_CODE;
+}
+
+std::string LoginParser::generateUniqueCode() {
 	std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	int length = 8; // Length of the random string
 
@@ -169,5 +194,5 @@ std::string LoginParser::generate_guest_username() {
 		random_string += charset[dist(gen)];
 	}
 
-	return prefix + random_string;
+	return random_string;
 }
