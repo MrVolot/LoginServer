@@ -70,7 +70,7 @@ std::string LoginParser::createHash(const std::string& login, const std::string&
 
 credentialsStatus LoginParser::login(const std::string& login, const std::string& password, const std::string& deviceId)
 {
-	std::string query{ "SELECT LOGIN, EMAIL, AUTHENTICATION_ENABLED FROM CONTACTS WHERE LOGIN = '" + login + "' AND PASSWORD = '" + password + "'" };
+	std::string query{ "SELECT LOGIN, EMAIL, AUTHENTICATION_ENABLED, ID FROM CONTACTS WHERE LOGIN = '" + login + "' AND PASSWORD = '" + password + "'" };
 	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
 	if (result.empty()) {
 		return credentialsStatus::WRONG_PASSWORD;
@@ -88,6 +88,9 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
 
+	if (!DatabaseHandler::getInstance().tableExists("FL_" + result[0][3])) {
+		createFriendListTable(result[0][3]);
+	}
 
 	query = "UPDATE AUTH SET USERID = '" + userId[0][0] + "', DEVICEID = '" + deviceId + "', TOKEN = '" + hash + "', SESSIONTIME = '" + std::to_string(authTime) + "', CREATIONDATE = '" + ss.str() + "'";
 	DatabaseHandler::getInstance().executeQuery(query);
@@ -155,7 +158,7 @@ credentialsStatus LoginParser::auth(const std::string& deviceId)
 void LoginParser::createFriendListTable(const std::string& id)
 {
 	std::string tableName{"FL_" + id};
-	std::string query{ "CREATE TABLE " + tableName + "(ID int NOT NULL PRIMARY KEY, Name varchar(255) NOT NULL)" }; // TODO make FR key instead of PM key
+	std::string query{ "CREATE TABLE " + tableName + "(ID int NOT NULL PRIMARY KEY, Name varchar(255) NOT NULL, CONSTRAINT FK_" + tableName +"_Contacts FOREIGN KEY(ID) REFERENCES CONTACTS(ID))" }; // TODO make FR key instead of PM key
 	DatabaseHandler::getInstance().executeQuery(query);
 }
 
