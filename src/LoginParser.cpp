@@ -46,7 +46,7 @@ credentialsStatus LoginParser::processCredentials(const std::string& str)
 std::string LoginParser::getUserId(const std::string& data)
 {
 	reader.parse(data.c_str(), value);
-	std::string userIdQuery{ "SELECT ID FROM CONTACTS WHERE LOGIN = '" + value["login"].asString() + "'" };
+	std::string userIdQuery{ "SELECT ID FROM " + ContactsTableName + " WHERE LOGIN = '" + value["login"].asString() + "'" };
 	auto userId{ DatabaseHandler::getInstance().executeQuery(userIdQuery) };
 	if (userId.empty()) {
 		return "";
@@ -70,7 +70,7 @@ std::string LoginParser::createHash(const std::string& login, const std::string&
 
 credentialsStatus LoginParser::login(const std::string& login, const std::string& password, const std::string& deviceId)
 {
-	std::string query{ "SELECT LOGIN, EMAIL, AUTHENTICATION_ENABLED, ID FROM CONTACTS WHERE LOGIN = '" + login + "' AND PASSWORD = '" + password + "'" };
+	std::string query{ "SELECT LOGIN, EMAIL, AUTHENTICATION_ENABLED, ID FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "' AND PASSWORD = '" + password + "'" };
 	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
 	if (result.empty()) {
 		return credentialsStatus::WRONG_PASSWORD;
@@ -78,27 +78,27 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 
 	int authTime{ 5 };
 	hash = createHash(login, password);
-	query = "UPDATE CONTACTS SET TOKEN = '" + hash + "' WHERE LOGIN = '" + login + "'";
+	query = "UPDATE " + ContactsTableName + " SET TOKEN = '" + hash + "' WHERE LOGIN = '" + login + "'";
 	DatabaseHandler::getInstance().executeQuery(query);
 
-	std::string userIdQuery{ "SELECT ID FROM CONTACTS WHERE LOGIN = '" + login + "'" };
+	std::string userIdQuery{ "SELECT ID FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "'" };
 	auto userId{ DatabaseHandler::getInstance().executeQuery(userIdQuery) };
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
 
-	if (!DatabaseHandler::getInstance().tableExists("FL_" + result[0][3])) {
+	if (!DatabaseHandler::getInstance().tableExists(DbNamePrefix + "FL_" + result[0][3])) {
 		createFriendListTable(result[0][3]);
 	}
 
-	query = "UPDATE AUTH SET USERID = '" + userId[0][0] + "', DEVICEID = '" + deviceId + "', TOKEN = '" + hash + "', SESSIONTIME = '" + std::to_string(authTime) + "', CREATIONDATE = '" + ss.str() + "'";
+	query = "UPDATE " + AuthTableName + " SET USERID = '" + userId[0][0] + "', DEVICEID = '" + deviceId + "', TOKEN = '" + hash + "', SESSIONTIME = '" + std::to_string(authTime) + "', CREATIONDATE = '" + ss.str() + "'";
 	DatabaseHandler::getInstance().executeQuery(query);
 
 	if (result[0][2] == "1") {
 		auto authCode{ generateUniqueCode() };
 		emailHandler.sendEmail(result[0][1], authCode);
-		query = "UPDATE CONTACTS SET AUTHENTICATION_CODE = ? WHERE LOGIN = ?";
+		query = "UPDATE " + ContactsTableName + " SET AUTHENTICATION_CODE = ? WHERE LOGIN = ? ";
 		DatabaseHandler::getInstance().executeWithPreparedStatement(query, { authCode, login });
 		return credentialsStatus::AUTHENTICATION_IS_NEEDED;
 	}
@@ -109,7 +109,7 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 
 credentialsStatus LoginParser::registration(const std::string& login, const std::string& password, const std::string& deviceId)
 {
-	std::string query{ "SELECT LOGIN FROM CONTACTS WHERE LOGIN = '" + login + "'" };
+	std::string query{ "SELECT LOGIN FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "'" };
 	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
 	if (!result.empty()) {
 		return credentialsStatus::USER_ALREADY_EXISTS;
@@ -117,16 +117,16 @@ credentialsStatus LoginParser::registration(const std::string& login, const std:
 
 	hash = createHash(login, password);
 	int authTime{ 5 };
-	query = "INSERT INTO CONTACTS VALUES ('" + login + "','" + password + "','" + hash + "')";
+	query = "INSERT INTO " + ContactsTableName + " (LOGIN, PASSWORD, TOKEN) VALUES('" + login + "', '" + password + "', '" + hash + "')";
 	DatabaseHandler::getInstance().executeQuery(query);
 
-	std::string userIdQuery{ "SELECT ID FROM CONTACTS WHERE LOGIN = '" + login + "'" };
+	std::string userIdQuery{ "SELECT ID FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "'" };
 	auto userId{ DatabaseHandler::getInstance().executeQuery(userIdQuery) };
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
-	query = "INSERT INTO AUTH VALUES('" + userId[0][0] + "','" + deviceId + "','" + hash + "','" + std::to_string(authTime) + "','" + ss.str() + "')";
+	query = "INSERT INTO " + AuthTableName + " VALUES('" + userId[0][0] + "','" + deviceId + "','" + hash + "','" + std::to_string(authTime) + "','" + ss.str() + "')";
 	DatabaseHandler::getInstance().executeQuery(query);
 
 	createFriendListTable(userId[0][0]);
@@ -136,7 +136,7 @@ credentialsStatus LoginParser::registration(const std::string& login, const std:
 
 credentialsStatus LoginParser::auth(const std::string& deviceId)
 {
-	std::string query{ "SELECT SESSIONTIME, CREATIONDATE, TOKEN FROM AUTH WHERE DEVICEID = '" + deviceId + "'" };
+	std::string query{ "SELECT SESSIONTIME, CREATIONDATE, TOKEN FROM " + AuthTableName + " WHERE DEVICEID = '" + deviceId + "'" };
 	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
 	if (result.empty()) {
 		return credentialsStatus::AUTHORIZATION_FAILED;
@@ -158,13 +158,13 @@ credentialsStatus LoginParser::auth(const std::string& deviceId)
 void LoginParser::createFriendListTable(const std::string& id)
 {
 	std::string tableName{"FL_" + id};
-	std::string query{ "CREATE TABLE " + tableName + "(ID int NOT NULL PRIMARY KEY, Name varchar(255) NOT NULL, CONSTRAINT FK_" + tableName +"_Contacts FOREIGN KEY(ID) REFERENCES CONTACTS(ID))" }; // TODO make FR key instead of PM key
+	std::string query{ "CREATE TABLE " + DbNamePrefix + tableName + "(ID int NOT NULL PRIMARY KEY, Name varchar(255) NOT NULL, CONSTRAINT FK_" + tableName + "_Contacts FOREIGN KEY(ID) REFERENCES " + ContactsTableName + "(ID))" }; // TODO make FR key instead of PM key
 	DatabaseHandler::getInstance().executeQuery(query);
 }
 
 credentialsStatus LoginParser::createGuestAccount()
 {
-	auto query{ "INSERT INTO CONTACTS (LOGIN, TOKEN, GUID) OUTPUT INSERTED.ID VALUES (?, ?, NEWID())" };
+	auto query{ "INSERT INTO " + ContactsTableName + " (LOGIN, TOKEN, GUID) OUTPUT INSERTED.ID VALUES(? , ? , NEWID())" };
 	auto guestName{ "Guest_" + generateUniqueCode() };
 	hash = createHash("login" + guestName, "password" + guestName);
 	auto result{ DatabaseHandler::getInstance().executeWithPreparedStatement(query, { guestName, hash }) };
@@ -176,7 +176,7 @@ credentialsStatus LoginParser::createGuestAccount()
 
 credentialsStatus LoginParser::verifyEmailCode(const std::string& id, const std::string& code)
 {
-	std::string query{ "SELECT AUTHENTICATION_CODE, EMAIL FROM CONTACTS WHERE ID = " + id };
+	std::string query{ "SELECT AUTHENTICATION_CODE, EMAIL FROM " + ContactsTableName+ " WHERE ID = " + id };
 	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
 	if (!result.empty() && result[0][0] == code) {
 		return credentialsStatus::CORRECT_EMAIL_CODE;

@@ -10,3 +10,7 @@
 #define EMAIL_CODE_VERIFICATION 0x0007
 #define CORRECT_CODE 0x0008
 #define WRONG_CODE 0x0009
+
+static const std::string ContactsTableName{ "Messenger.dbo.CONTACTS" };
+static const std::string AuthTableName{ "Messenger.dbo.AUTH" };
+static const std::string DbNamePrefix{ "Messenger.dbo." };
