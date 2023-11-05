@@ -92,7 +92,7 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 		createFriendListTable(result[0][3]);
 	}
 
-	query = "UPDATE " + AuthTableName + " SET USERID = '" + userId[0][0] + "', DEVICEID = '" + deviceId + "', TOKEN = '" + hash + "', SESSIONTIME = '" + std::to_string(authTime) + "', CREATIONDATE = '" + ss.str() + "'";
+	query = "UPDATE " + AuthTableName + " SET DEVICEID = '" + deviceId + "', TOKEN = '" + hash + "', SESSIONTIME = '" + std::to_string(authTime) + "', CREATIONDATE = '" + ss.str() + "' WHERE USERID = " + userId[0][0];
 	DatabaseHandler::getInstance().executeQuery(query);
 
 	if (result[0][2] == "1") {
