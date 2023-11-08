@@ -83,6 +83,17 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 
 	std::string userIdQuery{ "SELECT ID FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "'" };
 	auto userId{ DatabaseHandler::getInstance().executeQuery(userIdQuery) };
+	userNickname = login;
+	//try {
+	//	std::string photoStreamQuery{ "SELECT PHOTOSTREAM FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "'" };
+	//	auto photoStrResult = DatabaseHandler::getInstance().executeDbcQuery(photoStreamQuery);
+	//	if (photoStrResult.next()) {
+	//		photoStream = photoStrResult.get<std::string>(0);
+	//	}
+	//}
+	//catch (...) {
+	//	photoStream = "";
+	//}
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
 	std::stringstream ss;

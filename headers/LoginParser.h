@@ -20,6 +20,7 @@ class LoginParser {
 public:
 	std::string hash;
 	std::string userEmail;
+	std::string userNickname;
 	static LoginParser& getInstance();
 	credentialsStatus processCredentials(const std::string& str);
 	std::string getUserId(const std::string& data);

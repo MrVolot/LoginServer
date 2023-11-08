@@ -93,6 +93,7 @@ void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> 
 		value["command"] = RIGHTCREDENTIALS;
 		value["status"] = "true";
 		value["token"] = LoginParser::getInstance().hash;
+		value["userNickname"] = LoginParser::getInstance().userNickname;
 		connection->callWrite(writer.write(value));
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		connection->getSocket().close();
@@ -102,6 +103,7 @@ void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> 
 		value["command"] = AUTHSUCCESS;
 		value["status"] = "true";
 		value["token"] = LoginParser::getInstance().hash;
+		value["userNickname"] = LoginParser::getInstance().userNickname;
 		connection->callWrite(writer.write(value));
 		connection->getSocket().close();
 		return;
@@ -110,6 +112,7 @@ void LoginServer::sendResponse(std::shared_ptr<IConnectionHandler<LoginServer>> 
 		value["command"] = AUTHFAIL;
 		value["status"] = "false";
 		value["token"] = LoginParser::getInstance().hash;
+		value["userNickname"] = LoginParser::getInstance().userNickname;
 		connection->callWrite(writer.write(value));
 		return;
 	}
