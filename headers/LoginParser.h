@@ -12,7 +12,7 @@ class LoginParser {
 	LoginParser();
 	std::string createHash(const std::string& login, const std::string& password);
 	credentialsStatus login(const std::string& login, const std::string& password, const std::string& deviceId);
-	credentialsStatus registration(const std::string& login, const std::string& password, const std::string& deviceId);
+	credentialsStatus registration(const std::string& login, const std::string& password, const std::string& deviceId, const std::string& publicKey);
 	credentialsStatus auth(const std::string& deviceId);
 	void createFriendListTable(const std::string& id);
 	credentialsStatus createGuestAccount();

@@ -26,7 +26,7 @@ credentialsStatus LoginParser::processCredentials(const std::string& str)
 			return login(value["login"].asString(), value["password"].asString(), value["deviceId"].asString());
 		}
 		if (value["command"].asString() == "register") {
-			return registration(value["login"].asString(), value["password"].asString(), value["deviceId"].asString());
+			return registration(value["login"].asString(), value["password"].asString(), value["deviceId"].asString(), value["publicKey"].asString());
 		}
 		if (value["command"].asString() == "auth") {
 			return auth(value["deviceId"].asString());
@@ -118,7 +118,7 @@ credentialsStatus LoginParser::login(const std::string& login, const std::string
 	}
 }
 
-credentialsStatus LoginParser::registration(const std::string& login, const std::string& password, const std::string& deviceId)
+credentialsStatus LoginParser::registration(const std::string& login, const std::string& password, const std::string& deviceId, const std::string& publicKey)
 {
 	std::string query{ "SELECT LOGIN FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "'" };
 	auto result{ DatabaseHandler::getInstance().executeQuery(query) };
@@ -128,7 +128,7 @@ credentialsStatus LoginParser::registration(const std::string& login, const std:
 
 	hash = createHash(login, password);
 	int authTime{ 5 };
-	query = "INSERT INTO " + ContactsTableName + " (LOGIN, PASSWORD, TOKEN) VALUES('" + login + "', '" + password + "', '" + hash + "')";
+	query = "INSERT INTO " + ContactsTableName + " (LOGIN, PASSWORD, TOKEN, PUBLIC_KEY) VALUES('" + login + "', '" + password + "', '" + hash + "', '" + publicKey + "')";
 	DatabaseHandler::getInstance().executeQuery(query);
 
 	std::string userIdQuery{ "SELECT ID FROM " + ContactsTableName + " WHERE LOGIN = '" + login + "'" };
